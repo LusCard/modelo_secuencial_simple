@@ -1,13 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
-    <title>Document</title>
+    <title>Modelo Linear</title>
   </head>
   <body>
-    <div id="output_field"></div>
+    <div class="container">
+      <h1>Modelo de Predicción Linear: y = 2x +6</h1>
+      <div id="training-status">Entrenando el modelo...</div>
+    </div>
+
+    <div class="container">
+      <h2>Realizar predicción</h2>
+      <p>Ingrese un valor para X y el modelo predecirá el valor de Y:</p>
+      <input type="number" id="x-value" placeholder="Ingrese valor de X" />
+      <button onclick="predict()">Predecir Y</button>
+      <div id="prediction-result"></div>
+    </div>
+
+    <script>
+      let model;
+
+      async function learnLinear() {
+        model = tf.sequential();
+        model.add(tf.layers.dense({ units: 1, inputShape: [1] }));
+        model.compile({ loss: "meanSquaredError", optimizer: "sgd" });
+
+        const xs = tf.tensor2d([-6, -5, -4, -3, -2, -1, 0, 1, 2], [9, 1]);
+        const ys = tf.tensor2d([-6, -4, -2, 0, 2, 4, 6, 8, 10], [9, 1]);
+
+        await model.fit(xs, ys, { epochs: 350 });
+
+        document.getElementById("training-status").innerText =
+          "¡Modelo entrenado y listo para predecir!";
+
+        tf.dispose([xs, ys]);
+      }
+
+      function predict() {
+        const xValue = parseFloat(document.getElementById("x-value").value);
+
+        const inputTensor = tf.tensor2d([xValue], [1, 1]);
+        const prediction = model.predict(inputTensor);
+        const result = prediction.dataSync()[0];
+
+        document.getElementById("prediction-result").innerHTML = `
+                <p>Para x = ${xValue}, el modelo predice y ≈ ${result.toFixed(
+          2
+        )}</p>
+                <p>Valor real de y = 2*${xValue} + 6 = ${(
+          2 * xValue +
+          6
+        ).toFixed(2)}</p>
+            `;
+
+        tf.dispose([inputTensor, prediction]);
+      }
+
+      document.addEventListener("DOMContentLoaded", learnLinear);
+    </script>
   </body>
-  <script></script>
 </html>
